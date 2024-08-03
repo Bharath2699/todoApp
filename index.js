@@ -79,7 +79,7 @@ app.post("/login",async(req,res)=>{
 // authentication token
 
 const authenticationToken=(req,res,next)=>{
-    const authHeader=req.header['Authorization'];
+    const authHeader=req.headers['Authorization'];
     if (authHeader){
         const token=authHeader.split(" ")[1]
         if(token){
