@@ -2,6 +2,7 @@ const express=require("express");
 const cors=require("cors");
 const mongoose=require("mongoose");
 const jwt=require("jsonwebtoken");
+const bcrypt=require("bcrypt");
 const app=express();
 app.use(express.json());
 app.use(cors());
@@ -52,9 +53,10 @@ app.post("/register",async(req,res)=>{
     const {email,password}=req.body;
     const userPresent=await User.findOne({email:email});
     if(userPresent){
-        res.send("User already exist");
+        res.status(400).json({message:"User already exist"});
     }
-    const user=new User({email,password});
+    const hasedPassword= await bcrypt.hash(password,10);
+    const user=new User({email:email,password:hasedPassword});
     await user.save();
     res.status(201).send("User registeration successfully")
     
@@ -64,15 +66,15 @@ app.post("/login",async(req,res)=>{
     const {email,password}=req.body;
     const user=await User.findOne({email:email});
     if(user){
-        const isPasswordMatch=user.password===password;
+        const isPasswordMatch=await bcrypt.compare(password,user.password);
        if(isPasswordMatch){
             const token=jwt.sign({data:user.email},"secret_token",{expiresIn:"1hr"});
-            res.send(token);
+            res.status(200).json({token});
        }else{
-        res.send("wrong password")
+        res.status(401).json({message:"wrong password"});
        }
     }else{
-        res.send("wrong mail id");
+        res.status(401).json({message:"wrong mail id"});
     }
 })
 
